@@ -1,11 +1,129 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import dayjs from "dayjs";
+import Layout from "../layouts/Layout.astro";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import {
+	billingCompany,
+	billingSourceBank,
+	billingSource,
+	billingItems as billingItemsOriginal,
+} from "../../_privateInfo";
+
+dayjs.locale("ja");
+
+// 消費税
+const TAX_RATE = 0.1; // 10%
+// 源泉徴収
+const WITHHOLDING_TAX_RATE = 0.1021; // 10.21%
+
+const BILLING_ITEMS_MIN = 4;
+
+const billingItems = [...billingItemsOriginal];
+if (billingItems.length < BILLING_ITEMS_MIN) {
+	billingItems.push(
+		...Array(BILLING_ITEMS_MIN - billingItems.length).fill(null),
+	);
+}
+
+const billingTotal = billingItemsOriginal.reduce(
+	(sum, item) => sum + item.quantity * item.unitPrice,
+	0,
+);
+
+const formatCurrency = (amount: number) => {
+	return `¥${amount.toLocaleString()}`;
+};
 ---
-
 <Layout>
-	<Welcome />
+	<header class="text-center my-2">
+		<h1 class="text-4xl font-bold">請求書</h1>
+		<dl class="mt-4 text-right flex justify-end">
+			<dt class="text-lg after:content-['：']">発行日</dt>
+			<dd class="text-lg">{dayjs().format("YYYY年M月D日")}</dd>
+		</dl>
+	</header>
+
+	{/* 請求先 */}
+	<section class="p-4 border-b border-gray-300">
+		<h2 class="hidden">請求先</h2>
+		<address class="not-italic">
+			<p class="text-lg font-semibold">{billingCompany.name}<span>御中</span></p>
+			<p class="mt-2">{billingCompany.address}</p>
+		</address>
+	</section>
+
+	{/* 請求内容 */}
+	<section class="p-4">
+		<h2 class="text-xl font-bold mb-4">ご請求金額</h2>
+		<table class="min-w-full bg-white border border-gray-300">
+			<thead class="bg-gray-400">
+				<tr>
+					<th class="py-2 px-4 border-b text-left">品名</th>
+					<th class="py-2 px-4 border-b text-right">作業時間</th>
+					<th class="py-2 px-4 border-b text-right">単価</th>
+					<th class="py-2 px-4 border-b text-right">金額</th>
+				</tr>
+			</thead>
+			<tbody>
+				{billingItems.map((item) => (
+					<tr class="border-b min-h-12">
+						<td class="py-2 px-4 text-left">{item?.name ?? '　'}</td>
+						<td class="py-2 px-4 text-right tracking-wide open-sans">{item?.quantity}</td>
+						<td class="py-2 px-4 text-right tracking-wide open-sans">{item ? formatCurrency(item.unitPrice) : ''}</td>
+						<td class="py-2 px-4 text-right tracking-wide open-sans">{item ? formatCurrency(item.quantity * item.unitPrice) : ''}</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+
+		<div class="mt-4 pr-4 flex flex-col items-end">
+			<dl class="grid grid-cols-2 gap-x-2 gap-y-1 text-right w-fit">
+				<dt class="font-bold">小計</dt>
+				<dd class="tracking-wide open-sans min-w-[100px]">{formatCurrency(billingTotal)}</dd>	
+				<dt class="font-bold">消費税</dt>
+				<dd class="tracking-wide open-sans min-w-[100px]">{formatCurrency(Math.floor(billingTotal * TAX_RATE))}</dd>
+				<dt class="font-bold">源泉徴収</dt>
+				<dd class="tracking-wide open-sans min-w-[100px]">{formatCurrency(Math.floor(billingTotal * WITHHOLDING_TAX_RATE))}</dd>
+			</dl>
+			<hr class="w-[250px] border-t my-1" />
+			<dl class="grid grid-cols-2 gap-x-2 gap-y-1 text-right w-fit font-bold">
+				<dt>合計</dt>
+				<dd class="tracking-wide open-sans min-w-[100px]">{formatCurrency(billingTotal + Math.floor(billingTotal * TAX_RATE) - Math.floor(billingTotal * WITHHOLDING_TAX_RATE))}</dd>
+			</dl>
+	</div>
+	</section>
+
+	{/* 振込先口座情報 */}
+	<section class="mt-4 p-4 pr-32 border border-gray-300 bg-gray-100 rounded-lg w-fit">
+		<h2 class="text-xl font-bold mb-4">お振込先</h2>
+		<dl class="grid grid-cols-4 gap-y-1 gap-x-8">
+			<dt class="font-semibold">銀行名</dt>
+			<dd class="col-span-3">{billingSourceBank.bankName}</dd>
+			<dt class="font-semibold">支店名</dt>
+			<dd class="col-span-3">{billingSourceBank.branchName}</dd>
+			<dt class="font-semibold">口座番号</dt>
+			<dd class="col-span-3">{billingSourceBank.accountNumber}</dd>
+			<dt class="font-semibold">口座名義</dt>
+			<dd class="col-span-3">{billingSourceBank.accountHolder}</dd>
+		</dl>
+	</section>
+
+	{/* 請求者情報 */}
+	<section class="mt-8 p-4 pr-32 border-t border-gray-300 w-fit">
+		<h2 class="hidden">請求者情報</h2>
+			<dl class="grid grid-cols-4 gap-1 gap-x-8">
+			{billingSource.map((source) => (
+				<Fragment key={source.name}>
+					<dt class="font-bold">{source.name}</dt>
+					<dd class="col-span-3">{Array.isArray(source.value) ? (
+						<div class="flex flex-col">
+							{source.value.map((value) => (
+								<p>{value}</p>
+							))}
+						</div>
+					) : source.value}</dd>
+				</Fragment>
+			))}
+			</dl>
+	</section>
 </Layout>
