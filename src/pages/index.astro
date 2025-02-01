@@ -1,6 +1,13 @@
 ---
 import dayjs from "dayjs";
 import Layout from "../layouts/Layout.astro";
+import Currency from "../components/Currency.astro";
+
+import {
+	TAX_RATE,
+	WITHHOLDING_TAX_RATE,
+	BILLING_ITEMS_MIN,
+} from "../constants";
 
 import {
 	billingCompany,
@@ -10,13 +17,6 @@ import {
 } from "../../_privateInfo";
 
 dayjs.locale("ja");
-
-// 消費税
-const TAX_RATE = 0.1; // 10%
-// 源泉徴収
-const WITHHOLDING_TAX_RATE = 0.1021; // 10.21%
-
-const BILLING_ITEMS_MIN = 4;
 
 const billingItems = [...billingItemsOriginal];
 if (billingItems.length < BILLING_ITEMS_MIN) {
@@ -29,10 +29,6 @@ const billingTotal = billingItemsOriginal.reduce(
 	(sum, item) => sum + item.quantity * item.unitPrice,
 	0,
 );
-
-const formatCurrency = (amount: number) => {
-	return `¥${amount.toLocaleString()}`;
-};
 ---
 <Layout>
 	<header class="text-center my-2">
@@ -59,8 +55,8 @@ const formatCurrency = (amount: number) => {
 			<thead class="bg-gray-400">
 				<tr>
 					<th class="py-2 px-4 border-b text-left">品名</th>
-					<th class="py-2 px-4 border-b text-right">作業時間</th>
 					<th class="py-2 px-4 border-b text-right">単価</th>
+					<th class="py-2 px-4 border-b text-right">作業時間</th>
 					<th class="py-2 px-4 border-b text-right">金額</th>
 				</tr>
 			</thead>
@@ -68,9 +64,9 @@ const formatCurrency = (amount: number) => {
 				{billingItems.map((item) => (
 					<tr class="border-b min-h-12">
 						<td class="py-2 px-4 text-left">{item?.name ?? '　'}</td>
+						<td class="py-2 px-4 text-right tracking-wide open-sans">{item ? (<Currency value={item.unitPrice} />) : ''}</td>
 						<td class="py-2 px-4 text-right tracking-wide open-sans">{item?.quantity}</td>
-						<td class="py-2 px-4 text-right tracking-wide open-sans">{item ? formatCurrency(item.unitPrice) : ''}</td>
-						<td class="py-2 px-4 text-right tracking-wide open-sans">{item ? formatCurrency(item.quantity * item.unitPrice) : ''}</td>
+						<td class="py-2 px-4 text-right tracking-wide open-sans">{item ? (<Currency value={item.quantity * item.unitPrice} />) : ''}</td>
 					</tr>
 				))}
 			</tbody>
@@ -79,16 +75,16 @@ const formatCurrency = (amount: number) => {
 		<div class="mt-4 pr-4 flex flex-col items-end">
 			<dl class="grid grid-cols-2 gap-x-2 gap-y-1 text-right w-fit">
 				<dt class="font-bold">小計</dt>
-				<dd class="tracking-wide open-sans min-w-[100px]">{formatCurrency(billingTotal)}</dd>	
+				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={billingTotal} /></dd>	
 				<dt class="font-bold">消費税</dt>
-				<dd class="tracking-wide open-sans min-w-[100px]">{formatCurrency(Math.floor(billingTotal * TAX_RATE))}</dd>
+				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={Math.floor(billingTotal * TAX_RATE)} /></dd>
 				<dt class="font-bold">源泉徴収</dt>
-				<dd class="tracking-wide open-sans min-w-[100px]">{formatCurrency(Math.floor(billingTotal * WITHHOLDING_TAX_RATE))}</dd>
+				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={Math.floor(billingTotal * WITHHOLDING_TAX_RATE)}/></dd>
 			</dl>
 			<hr class="w-[250px] border-t my-1" />
 			<dl class="grid grid-cols-2 gap-x-2 gap-y-1 text-right w-fit font-bold">
 				<dt>合計</dt>
-				<dd class="tracking-wide open-sans min-w-[100px]">{formatCurrency(billingTotal + Math.floor(billingTotal * TAX_RATE) - Math.floor(billingTotal * WITHHOLDING_TAX_RATE))}</dd>
+				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={billingTotal + Math.floor(billingTotal * TAX_RATE) - Math.floor(billingTotal * WITHHOLDING_TAX_RATE)} /></dd>
 			</dl>
 	</div>
 	</section>

@@ -24,4 +24,4 @@ pnpm-debug.log*
 .idea/
 
 # 個人情報ファイル
-_privateInfo.ts
+_privateInfo.ts*

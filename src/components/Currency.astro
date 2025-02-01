@@ -1,0 +1,11 @@
+---
+import type {} from "astro";
+
+type Props = {
+	value: number;
+	class?: astroHTML.JSX.HTMLAttributes["class"];
+};
+
+const { value, class: className } = Astro.props;
+---
+<span class={className}>{value.toLocaleString()}</span><span class="text-xs pl-0.5">円</span>
