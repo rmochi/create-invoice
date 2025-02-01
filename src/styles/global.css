@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@page {
+	margin: 0; /* 余白 */
+}
+
 .open-sans {
 	font-family: "Open Sans", serif;
 	font-optical-sizing: auto;
