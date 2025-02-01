@@ -29,8 +29,19 @@ const billingTotal = billingItemsOriginal.reduce(
 	(sum, item) => sum + item.quantity * item.unitPrice,
 	0,
 );
+
+// 消費税
+const tax = Math.floor(billingTotal * TAX_RATE);
+// 源泉徴収
+const withholdingTax = Math.floor(billingTotal * WITHHOLDING_TAX_RATE);
+// 合計
+const total = billingTotal + tax - withholdingTax;
 ---
 <Layout>
+	<button
+		class="print:hidden p-1 px-4 absolute top-0 right-0 rounded-lg border cursor-pointer bg-green-200 hover:bg-green-400"
+	 	onclick="window.print(); return false;">このページを印刷する</button>
+
 	<header class="text-center my-2">
 		<h1 class="text-4xl font-bold">請求書</h1>
 		<dl class="mt-4 text-right flex justify-end">
@@ -39,30 +50,63 @@ const billingTotal = billingItemsOriginal.reduce(
 		</dl>
 	</header>
 
-	{/* 請求先 */}
-	<section class="p-4 border-b border-gray-300">
-		<h2 class="hidden">請求先</h2>
-		<address class="not-italic">
-			<p class="text-lg font-semibold">{billingCompany.name}<span>御中</span></p>
-			<p class="mt-2">{billingCompany.address}</p>
-		</address>
-	</section>
+	<div class="flex justify-between py-4">
+		{/* 請求先 */}
+		<section class="flex-1 py-4">
+			<h2 class="hidden">請求先</h2>
+			<address class="not-italic">
+				<p class="text-xl font-bold">{billingCompany.name}<span class="ml-4">御中</span></p>
+				<p class="mt-2 text-sm">{billingCompany.address}</p>
+			</address>
+		</section>
+
+		{/* 請求者情報 */}
+		<section class="p-4 text-sm w-fit">
+			<h2 class="hidden">請求者情報</h2>
+				<dl class="flex flex-col gap-1">
+					<dt class="hidden">名前</dt>
+					<dd class="text-lg font-bold">{billingSource.name}</dd>
+					<dt class="hidden">住所</dt>
+					<dd>{Array.isArray(billingSource.address) ? (
+						<div class="flex flex-col">
+							{billingSource.address.map((value) => (
+								<p>{value}</p>
+							))}
+						</div>
+					) : billingSource.address}</dd>
+					<dt class="hidden">電話番号</dt>
+					<dd>{billingSource.phoneNumber}</dd>
+					{!!billingSource.email && (
+						<Fragment>
+							<dt class="hidden">メールアドレス</dt>
+							<dd>{billingSource.email}</dd>
+						</Fragment>
+					)}
+				</dl>
+		</section>
+	</div>
+
 
 	{/* 請求内容 */}
-	<section class="p-4">
-		<h2 class="text-xl font-bold mb-4">ご請求金額</h2>
-		<table class="min-w-full bg-white border border-gray-300">
+	<section class="mt-4">
+		<div class="flex gap-x-4 py-4">
+			<h2 class="text-xl font-bold mb-4">ご請求金額</h2>
+			<p class="text-xl font-bold"><Currency value={total} /></p>
+		</div>
+
+		<div class="w-full border border-gray-300 rounded-lg overflow-hidden">
+		<table class="w-full rounded-lg">
 			<thead class="bg-gray-400">
-				<tr>
-					<th class="py-2 px-4 border-b text-left">品名</th>
-					<th class="py-2 px-4 border-b text-right">単価</th>
-					<th class="py-2 px-4 border-b text-right">作業時間</th>
-					<th class="py-2 px-4 border-b text-right">金額</th>
+				<tr class="border-b">
+					<th class="py-2 px-4 text-left">品名</th>
+					<th class="py-2 px-4 text-right">単価</th>
+					<th class="py-2 px-4 text-right">作業時間（h）</th>
+					<th class="py-2 px-4 text-right">金額</th>
 				</tr>
 			</thead>
 			<tbody>
 				{billingItems.map((item) => (
-					<tr class="border-b min-h-12">
+					<tr class="not-last:border-b min-h-12 odd:bg-white even:bg-slate-50">
 						<td class="py-2 px-4 text-left">{item?.name ?? '　'}</td>
 						<td class="py-2 px-4 text-right tracking-wide open-sans">{item ? (<Currency value={item.unitPrice} />) : ''}</td>
 						<td class="py-2 px-4 text-right tracking-wide open-sans">{item?.quantity}</td>
@@ -71,55 +115,38 @@ const billingTotal = billingItemsOriginal.reduce(
 				))}
 			</tbody>
 		</table>
+		</div>
+
 
 		<div class="mt-4 pr-4 flex flex-col items-end">
 			<dl class="grid grid-cols-2 gap-x-2 gap-y-1 text-right w-fit">
 				<dt class="font-bold">小計</dt>
 				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={billingTotal} /></dd>	
 				<dt class="font-bold">消費税</dt>
-				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={Math.floor(billingTotal * TAX_RATE)} /></dd>
+				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={tax} /></dd>
 				<dt class="font-bold">源泉徴収</dt>
-				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={Math.floor(billingTotal * WITHHOLDING_TAX_RATE)}/></dd>
+				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={withholdingTax}/></dd>
 			</dl>
 			<hr class="w-[250px] border-t my-1" />
 			<dl class="grid grid-cols-2 gap-x-2 gap-y-1 text-right w-fit font-bold">
 				<dt>合計</dt>
-				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={billingTotal + Math.floor(billingTotal * TAX_RATE) - Math.floor(billingTotal * WITHHOLDING_TAX_RATE)} /></dd>
+				<dd class="tracking-wide open-sans min-w-[100px]"><Currency value={total} /></dd>
 			</dl>
 	</div>
 	</section>
 
 	{/* 振込先口座情報 */}
-	<section class="mt-4 p-4 pr-32 border border-gray-300 bg-gray-100 rounded-lg w-fit">
+	<section class="mt-12 py-4 w-fit">
 		<h2 class="text-xl font-bold mb-4">お振込先</h2>
-		<dl class="grid grid-cols-4 gap-y-1 gap-x-8">
-			<dt class="font-semibold">銀行名</dt>
-			<dd class="col-span-3">{billingSourceBank.bankName}</dd>
-			<dt class="font-semibold">支店名</dt>
-			<dd class="col-span-3">{billingSourceBank.branchName}</dd>
-			<dt class="font-semibold">口座番号</dt>
-			<dd class="col-span-3">{billingSourceBank.accountNumber}</dd>
-			<dt class="font-semibold">口座名義</dt>
-			<dd class="col-span-3">{billingSourceBank.accountHolder}</dd>
+		<dl class="grid grid-cols-3 gap-y-1 gap-x-8">
+			<dt class="font-bold">銀行名</dt>
+			<dd class="col-span-2">{billingSourceBank.bankName}</dd>
+			<dt class="font-bold">支店名</dt>
+			<dd class="col-span-2">{billingSourceBank.branchName}</dd>
+			<dt class="font-bold">口座番号</dt>
+			<dd class="col-span-2">{billingSourceBank.accountNumber}</dd>
+			<dt class="font-bold">口座名義</dt>
+			<dd class="col-span-2">{billingSourceBank.accountHolder}</dd>
 		</dl>
-	</section>
-
-	{/* 請求者情報 */}
-	<section class="mt-8 p-4 pr-32 border-t border-gray-300 w-fit">
-		<h2 class="hidden">請求者情報</h2>
-			<dl class="grid grid-cols-4 gap-1 gap-x-8">
-			{billingSource.map((source) => (
-				<Fragment key={source.name}>
-					<dt class="font-bold">{source.name}</dt>
-					<dd class="col-span-3">{Array.isArray(source.value) ? (
-						<div class="flex flex-col">
-							{source.value.map((value) => (
-								<p>{value}</p>
-							))}
-						</div>
-					) : source.value}</dd>
-				</Fragment>
-			))}
-			</dl>
 	</section>
 </Layout>

@@ -39,20 +39,13 @@ export const billingSourceBank = {
 };
 
 // 請求元情報
-export const billingSource = [
-	{
-		name: "氏名",
-		value: "サンプル太郎",
-	},
-	{
-		name: "住所",
-		value: ["東京都千代田区永田町１丁目１０−１"],
-	},
-	{
-		name: "電話番号",
-		value: "xxx-xxxx-xxxx",
-	},
-] as const satisfies {
-	name: string; // 項目名
-	value: string | string[]; // 値
-}[];
+export const billingSource: {
+	name: string; // 氏名
+	address: string | string[]; // 住所
+	phoneNumber: string; // 電話番号
+	email?: string; // メールアドレス
+} = {
+	name: "サンプル太郎",
+	address: "東京都千代田区永田町１丁目１０−１",
+	phoneNumber: "xxx-xxxx-xxxx",
+} as const;
