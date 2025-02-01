@@ -63,19 +63,23 @@ const total = billingTotal + tax - withholdingTax;
 		{/* 請求者情報 */}
 		<section class="p-4 text-sm w-fit">
 			<h2 class="hidden">請求者情報</h2>
-				<dl class="flex flex-col gap-1">
+				<dl class="flex flex-col gap-y-2">
 					<dt class="hidden">名前</dt>
 					<dd class="text-lg font-bold">{billingSource.name}</dd>
 					<dt class="hidden">住所</dt>
 					<dd>{Array.isArray(billingSource.address) ? (
-						<div class="flex flex-col">
+						<div class="flex flex-col gap-y-0.5">
 							{billingSource.address.map((value) => (
 								<p>{value}</p>
 							))}
 						</div>
 					) : billingSource.address}</dd>
-					<dt class="hidden">電話番号</dt>
-					<dd>{billingSource.phoneNumber}</dd>
+					{!!billingSource.phoneNumber && (
+						<Fragment>
+							<dt class="hidden">電話番号</dt>
+							<dd class="before:content-['TEL：']">{billingSource.phoneNumber}</dd>
+						</Fragment>
+					)}
 					{!!billingSource.email && (
 						<Fragment>
 							<dt class="hidden">メールアドレス</dt>

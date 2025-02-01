@@ -42,10 +42,10 @@ export const billingSourceBank = {
 export const billingSource: {
 	name: string; // 氏名
 	address: string | string[]; // 住所
-	phoneNumber: string; // 電話番号
+	phoneNumber?: string; // 電話番号
 	email?: string; // メールアドレス
 } = {
 	name: "サンプル太郎",
-	address: "東京都千代田区永田町１丁目１０−１",
+	address: ["〒xxx-xxxx", "東京都千代田区永田町１丁目１０−１"],
 	phoneNumber: "xxx-xxxx-xxxx",
 } as const;
