@@ -14,6 +14,7 @@ import {
 	billingSourceBank,
 	billingSource,
 	billingItems as billingItemsOriginal,
+	quantityText,
 } from "../../_privateInfo";
 
 dayjs.locale("ja");
@@ -104,7 +105,7 @@ const total = billingTotal + tax - withholdingTax;
 				<tr class="border-b">
 					<th class="py-2 px-4 text-left">品名</th>
 					<th class="py-2 px-4 text-right">単価</th>
-					<th class="py-2 px-4 text-right">作業時間（h）</th>
+					<th class="py-2 px-4 text-right">{quantityText}</th>
 					<th class="py-2 px-4 text-right">金額</th>
 				</tr>
 			</thead>

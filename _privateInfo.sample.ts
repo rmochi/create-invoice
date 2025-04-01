@@ -5,6 +5,8 @@ import type {
 	BillingSource,
 } from "./types";
 
+export const quantityText = "作業時間（h）";
+
 // 請求内容
 export const billingItems: BillingItem[] = [
 	{
